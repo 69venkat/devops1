@@ -1,0 +1,147 @@
+
+
+2025-03-16 00:27:36,128  [VEEDBPoller-VEEDBPoller3-consumer-3] INFO  - o.a.k.c.u.AppInfoParser App info kafka.consumer for VEEDBPoller-VEEDBPoller3-consumer-3 unregistered
+2025-03-16 00:27:36,132  [VEEDBPoller-VEEDBPoller3-consumer-4] INFO  - o.a.k.c.u.AppInfoParser App info kafka.consumer for VEEDBPoller-VEEDBPoller3-consumer-4 unregistered
+
+
+2025-03-18 04:39:42,885 [qtp898557489-21] INFO  - c.e.v.s.m.i.ApplicationControlServiceImpl Can not start application, no active instance found in DB
+2025-03-18 04:39:42,885 [qtp898557489-21] INFO  - c.e.v.s.m.i.ApplicationControlServiceImpl Before starting application AMIProvisioningWorkflowTrigger
+2025-03-18 04:39:42,886 [qtp898557489-21] INFO  - c.e.v.s.m.i.ApplicationControlServiceImpl Can not start application, no active instance found in DB
+
+SHUTDOWN IMMEDIATE
+shutdown immediate;
+===
+
+
+========================
+MissingReadsDetection-3
+VEEDBPoller-3 
+MissingReadsDetection-5
+VEEDBPoller-5
+========================
+ WARN  - o.a.c.d.BasicDataSource An internal object pool swallowed an Exception.
+org.apache.commons.dbcp2.LifetimeExceededException: The lifetime of the connection [1,815,536] milliseconds exceeds the maximum permitted value of [1,800,000] milliseconds
+	at org.apache.commons.dbcp2.PoolableConnectionFactory.validateLifetime(PoolableConnectionFactory.java:637) ~[commons-dbcp2-2.7.0.jar!/:2.7.0]
+
+
+2025-03-09 00:04:23,424 [tid:VJNHUR] [veeProcessRequestDBPoller] WARN  - o.a.c.d.BasicDataSource An internal object pool swallowed an Exception.
+org.apache.commons.dbcp2.LifetimeExceededException: The lifetime of the connection [1,841,620] milliseconds exceeds the maximum permitted value of [1,800,000] milliseconds
+	at org.apache.commons.dbcp2.PoolableConnectionFactory.validateLifetime(PoolableConnectionFactory.java:637) ~[commons-dbcp2-2.7.0.jar!/:2.7.0]
+
+
+=============
+
+find ${PWD} -name \*.xml -print | xargs -i grep -i -A 12 -B 1 'updateLockInfoAfter' \{\} /dev/null | grep -E 'ns:property>|ns:name>|ns:defaultValue>|ns:value>|--'
+===============
+================
+
+
+
+check the log msg count
+check the kafka lag - 
+====
+
+how VEE Post Process Request (VPR) records are created by multiple components for subsequent processing by the Device Reads Processor.  
+This topic also contains information about the tables that archive post process requests. 
+The archived VPR records allow a user to get information about post process requests that are currently being processed, 
+components that created the requests, and the final status of the post process request, whether the processing succeeded or failed.
+=========================
+it is observed that VPR’s are getting piled up in vee_process_request table and unable to move to corresponding log table.
+
+The main case we need to check is that when VEEDBPoller polls every 15 mins, it will poll <=400000 records from VPR table. 
+Is DRP able to process that load within 15 mins timeframe? 
+
+Is the available CPU core being able to manage and process the pushed records?
+
+I checked with PH regarding the same and their recommendation was to check the thread settings of the DRP so that it is aligned to kafka partition 
+and existing CPU core can process the incoming transactions.
+
+For now, the suggestion that was provided is either to increase the polling time in a way that all <=400000 are pushed and processed 
+or reduce the rownum count so that it will best fit for 15 min polling time.
+
+=======================================
+vee_process_request_log is not having any records
+
+For every 15 min, VEE DB poller will poll the VPR records and it should push it to DRP
+
+16 threads- 48
+
+how many vve msg queue
+
+---
+thread count 5 :  Be1-15, BE2-15, 20 - BE3( 4 instances)
+===
+Rowcount need to change- 
+==
+kafka partitions - 100
+
+https://support.emeter.com/support/solutions/articles/77000514801-kafka-re-balancing-issue
+
+
+
+
+./kafka-consumer-groups.sh --bootstrap-server hostname:9092 --describe --group SAPAdapterService –members
+
+============
+
+
+
+2025-03-19 08:02:11,610 [tid:HTGVTO] [DeviceReadsProcessor-DeviceReadsProcessor3-consumer-8] INFO  - c.e.a.m.d.AbstractMessageDispatcher In Message ReplyTo is null for message with id [VEEDBPoller_3_35806571014743736_1891373597] + one way = [true]
+2025-03-19 08:02:11,611 [tid:AESHAN] [DeviceReadsProcessor-DeviceReadsProcessor3-consumer-9] INFO  - c.e.h.l.LogContext Received trace :: [tid: AESHAN,time: 2025-03-19T08:02:11.588926,path: VEEDBPoller3->DeviceReadsProcessor3]
+2025-03-19 08:02:11,611 [tid:AESHAN] [DeviceReadsProcessor-DeviceReadsProcessor3-consumer-9] INFO  - c.e.a.m.d.AbstractMessageDispatcher Handling request message with id [VEEDBPoller_3_35806571019746794_969889920]
+2025-03-19 08:02:11,611 [tid:AESHAN] [DeviceReadsProcessor-DeviceReadsProcessor3-consumer-9] INFO  - c.e.a.s.ServiceImplInvoker Invoking Service Implementation for message using reflection with id =[VEEDBPoller_3_35806571019746794_969889920
+2025-03-19 08:02:11,621 [tid:AESHAN] [DeviceReadsProcessor-DeviceReadsProcessor3-consumer-9] INFO  - c.e.a.m.d.AbstractMessageDispatcher In Message ReplyTo is null for message with id [VEEDBPoller_3_35806571019746794_969889920] + one way = [true]
+2025-03-19 08:02:11,625 [tid:AESHAN] [DeviceReadsProcessor-DeviceReadsProcessor3-consumer-9] INFO  - c.e.h.l.LogContext Received trace :: [tid: AESHAN,time: 2025-03-19T08:02:11.588926,path: VEEDBPoller3->DeviceReadsProcessor3]
+2025-03-19 08:02:11,625 [tid:AESHAN] [DeviceReadsProcessor-DeviceReadsProcessor3-consumer-9] INFO  - c.e.a.m.d.AbstractMessageDispatcher Handling request message with id [VEEDBPoller_3_35806571040706557_847108281]
+2025-03-19 08:02:11,625 [tid:AESHAN] [DeviceReadsProcessor-DeviceReadsProcessor3-consumer-9] INFO  - c.e.a.s.ServiceImplInvoker Invoking Service Implementation for message using reflection with id =[VEEDBPoller_3_35806571040706557_847108281
+2025-03-19 08:02:11,638 [tid:AESHAN] [DeviceReadsProcessor-DeviceReadsProcessor3-consumer-9] INFO  - c.e.a.m.d.AbstractMessageDispatcher In Message ReplyTo is null for message with id [VEEDBPoller_3_35806571040706557_847108281] + one way = [true]
+
+===== BE3==
+
+AbstractMessageDispatcher Handling request message with id [VEEDBPoller_3_35805568714037308_1322265351]
+
+tid:ILWGV6] [eip-thread-1] 
+tid:VPIOQZ] [eip-thread-4
+tid:Q1LWY2] [eip-thread-2
+tid:FPYLMQ] [eip-thread-3
+
+============================
+awk -v d="$(date --date='15 minutes ago' '+%Y-%m-%d %H:%M')" '$0 ~ d' VEEDBPoller-3.log | grep -i "eip-thread-1" | wc -l
+awk -v d="$(date --date='15 minutes ago' '+%Y-%m-%d %H:%M:')" '$0 ~ d' VEEDBPoller-1.log | grep -i "eip-thread-1" | wc -l
+
+==============================================================================
+[eip@aweleipaccbe3 logs]$ grep -i "eip-thread-1" VEEDBPoller-3.log | wc -l
+382
+[eip@aweleipaccbe3 logs]$ grep -i "eip-thread-1" VEEDBPoller-2.log | wc -l
+grep: VEEDBPoller-2.log: No such file or directory
+0
+[eip@aweleipaccbe3 logs]$ grep -i "eip-thread-1" VEEDBPoller-3.log | wc -l
+382
+[eip@aweleipaccbe3 logs]$ grep -i "eip-thread-2" VEEDBPoller-3.log | wc -l
+363
+[eip@aweleipaccbe3 logs]$ grep -i "eip-thread-3" VEEDBPoller-3.log | wc -l
+363
+[eip@aweleipaccbe3 logs]$ grep -i "eip-thread-4" VEEDBPoller-3.log | wc -l
+374
+[eip@aweleipaccbe3 logs]$ grep -i "eip-thread-5" VEEDBPoller-3.log | wc -l
+365
+[eip@aweleipaccbe3 logs]$ grep -i "eip-thread-6" VEEDBPoller-3.log | wc -l
+354
+
+
+=========================
+
+DTS request:current time stamp
+delete the record and apply workaround - Eidgrefresher -> michael
+
+7AMX2224000126 -number de computer
+
+DTS export is OK
+
+it won't go back previous date
+interpollation
+extrapollation
+
+EidgRefresher
+
+=======
